@@ -1,0 +1,31 @@
+{
+  "TableInput": {
+    "Description": "Default Glue Table Template",
+    "Name": "***glue_table_name(string)***",
+    "StorageDescriptor": {
+      "Columns": "***glue_sd_columns[list]***",
+      "Location": "***glue_location_uri(string)***",
+    "InputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+    "OutputFormat": "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+    "Compressed": false,
+    "NumberOfBuckets": -1,
+      "SerdeInfo": {
+        "SerializationLibrary": "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe",
+        "Parameters": {
+          "serialization.format": "1"
+        }
+      }
+    },
+    "PartitionKeys": [
+      {
+        "Name": "partition_0",
+        "Type": "string"
+      }
+    ],
+    "Parameters": {
+      "classification": "parquet",
+      "compressionType": "none",
+      "typeOfData": "file"
+    }
+  }
+}
