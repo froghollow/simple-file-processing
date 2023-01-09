@@ -5,7 +5,7 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-args = getResolvedOptions(sys.argv, ["JOB_NAME","BatchParms"])
+args = getResolvedOptions(sys.argv, ["JOB_NAME","ProcessParms"])
 #print(args)
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -14,18 +14,22 @@ job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
 
 import json
-batch_parms_s = args['BatchParms']
+batch_parms_s = args['ProcessParms']
 #print(batch_parms_s)
 batch_parms = json.loads(batch_parms_s)
 
 glue_database_name = batch_parms['GlueDatabaseName']
-s3_bucket = batch_parms['S3OutputBucket']
-s3_input_folder  = batch_parms['S3InputFolder']
-s3_output_folder = batch_parms['S3OutputFolder']
+#s3_bucket = batch_parms['S3OutputBucket']
+#s3_input_folder  = batch_parms['S3InputFolder']
+#s3_output_folder = batch_parms['S3OutputFolder']
+s3_input_bucket  = batch_parms['S3LandingPadBucket']
+s3_input_folder  = batch_parms['S3LandingPadInput']
+s3_output_bucket = batch_parms['S3DatalakeBucket']
+s3_output_folder = batch_parms['S3DatalakeOutput']
 glue_table_names = batch_parms['ZipExtracted']['GlueTableNames']
-partition_folders = batch_parms['ZipExtracted']['PartitionFolders']
+partition_folders= batch_parms['ZipExtracted']['PartitionFolders']
 
-# ToDo: source from common glue_functions.py module ...
+# ToDo: source from common glue_functions.py ...
 # from glue_functions import crup_glue_partition
 def crup_glue_partition( glue_database_name, glue_table_name, partition_keys ):
     ''' CReate or UPdate Glue Partition '''
@@ -90,7 +94,7 @@ for glue_table_name in glue_table_names:
             format="csv",
             connection_options={
                 "paths": [
-                    f"s3://{s3_bucket}/{s3_input_folder}/{glue_table_name}/{partition_folder}/"
+                    f"s3://{s3_input_bucket}/{s3_input_folder}/{glue_table_name}/{partition_folder}/"
                 ],
                 "recurse": True,
             },
@@ -108,13 +112,12 @@ for glue_table_name in glue_table_names:
             connection_type="s3",
             format="glueparquet",
             connection_options={
-                "path": f"s3://{s3_bucket}/{s3_output_folder}/{glue_table_name}/{partition_folder}/",
+                "path": f"s3://{s3_output_bucket}/{s3_output_folder}/{glue_table_name}/{partition_folder}/",
                 "partitionKeys": [],
             },
             format_options={"compression": "snappy"},
             transformation_ctx="s3_output_sink",
         )
-        # CReate or UPdate Glue Table Partitions
         crup_glue_partition( glue_database_name, glue_table_name, [ partition_folder ] )
 
 job.commit()

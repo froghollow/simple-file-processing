@@ -21,25 +21,25 @@ def lambda_handler(event, context):
         raise Exception("event['source'] not specified.")
 
     batch_id = s3_key.split('/')[-1]
-    response['batch_parms']['BatchId'] = batch_id
+    response['process_parms']['BatchId'] = batch_id
 
     ''' ToDo:  Refactor from v4 >>>
     # create or fetch Batch
     batch = bat.Batch( batch_id ) 
 
     if len(batch.batch['BatchObjects']) > 0:    
-        response['batch_parms']['NameList'] = batch.get_batch_objects()
+        response['process_parms']['NameList'] = batch.get_batch_objects()
 
-    if len(batch.batch['BatchObjects']) == 0 and 'NameList' in event['batch_parms'].keys():
-        batch.initialize_batch_objects( event['batch_parms']['NameList'] )
+    if len(batch.batch['BatchObjects']) == 0 and 'NameList' in event['process_parms'].keys():
+        batch.initialize_batch_objects( event['process_parms']['NameList'] )
 
     <<< '''
 
-    if 'StepFnArn' in event['batch_parms'].keys():
-        step_arn = event['batch_parms']['StepFnArn']
+    if 'StepFnArn' in event['process_parms'].keys():
+        step_arn = event['process_parms']['StepFnArn']
     elif 'StepFnArn' in os.environ.keys():
         step_arn = os.environ['StepFnArn']
-        response['batch_parms']['StepFnArn'] = step_arn
+        response['process_parms']['StepFnArn'] = step_arn
     else:
         #raise Exception("Can't find a Step Function ARN to execute!")
         print("Can't find a Step Function ARN to execute!")
@@ -51,9 +51,9 @@ def lambda_handler(event, context):
 
         now = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         exec_name = f"{now}-{batch_id}"
-        response['batch_parms']['ExecName'] = exec_name
+        response['process_parms']['ExecName'] = exec_name
 
-        # Execute State Machine (here in Lambda, not EventBridge, to support batch_parms exec_name)
+        # Execute State Machine (here in Lambda, not EventBridge, to support process_parms exec_name)
         sfn_client = boto3.client('stepfunctions')
         sfn_resp = sfn_client.start_execution(
             stateMachineArn = step_arn,

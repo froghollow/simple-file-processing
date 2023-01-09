@@ -4,12 +4,12 @@
   "Runtime": "python3.9",
   "Role": "arn:aws:iam::442483223120:role/daab-lab-fp5a-S3_Unzip_Role",
   "Handler": "lambda_function.lambda_handler",
-  "CodeSize": 2000,
+  "CodeSize": 2013,
   "Description": "Download ZIP archive file from S3, extract it, and upload GZip'd member files to S3",
   "Timeout": 60,
   "MemorySize": 128,
-  "LastModified": "2022-12-27T19:07:25.272+0000",
-  "CodeSha256": "6xjRe23dLo5KXT5Pi6W+V0gfZl/5EeFLN+iOnKP1FxA=",
+  "LastModified": "2023-01-08T20:02:05.000+0000",
+  "CodeSha256": "7A5gkp0fzU+XZPDMzVNWQqk2POkLdrBlxRPCb835p54=",
   "Version": "$LATEST",
   "Environment": {
     "Variables": {
@@ -20,8 +20,11 @@
   "TracingConfig": {
     "Mode": "PassThrough"
   },
-  "RevisionId": "859b52e3-c707-4984-9229-0a5c5157fcc9",
+  "RevisionId": "16ef709f-6db9-43e6-8990-0658f9f50a85",
   "State": "Active",
   "LastUpdateStatus": "Successful",
-  "PackageType": "Zip"
+  "PackageType": "Zip",
+  "Architectures": [
+    "x86_64"
+  ]
 }

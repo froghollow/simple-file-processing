@@ -17,11 +17,11 @@ def lambda_handler(event, context):
         if event['source'] == 'aws.s3':
             s3_bucket = event['detail']['bucket']['name']
             s3_key = event['detail']['object']['key']
-    elif 'Records' in event.keys():
-        # triggered by S3 ObjectCreated event ... (deprecated 2212)
-        if event['Records'][0]['eventSource'] == 'aws:s3':  
-            s3_bucket = event['Records'][0]['s3']['bucket']['name']
-            s3_key = event['Records'][0]['s3']['object']['key']
+    #elif 'Records' in event.keys():
+    #    # triggered by S3 ObjectCreated event ... (deprecated 2212)
+    #    if event['Records'][0]['eventSource'] == 'aws:s3':  
+    #        s3_bucket = event['Records'][0]['s3']['bucket']['name']
+    #        s3_key = event['Records'][0]['s3']['object']['key']
     else:
         # ... or simple event from elsewhere
         s3_bucket = event['S3BucketName']
@@ -31,8 +31,8 @@ def lambda_handler(event, context):
 
     work_zipfile_name = s3_source_url.split('/')[-1]
     s3_source_folder = s3_key[:s3_key.rfind('/')]
-    if 'S3ExtractFolder' in event['batch_parms'].keys():
-        s3_target_folder = event['batch_parms']['S3ExtractFolder'] 
+    if 'S3ExtractFolder' in event['process_parms'].keys():
+        s3_target_folder = event['process_parms']['S3ExtractFolder'] 
     else:
         s3_target_folder = s3_source_folder
 
@@ -78,8 +78,8 @@ def lambda_handler(event, context):
             os.remove( extract_path )
             os.remove( f"{extract_path}.gz" )
 
-    response['batch_parms']['S3InputFolder'] = s3_source_folder
-    response['batch_parms']['ZipExtracted']  = zip_extracted
+    response['process_parms']['S3InputFolder'] = s3_source_folder
+    response['process_parms']['ZipExtracted']  = zip_extracted
 
     import shutil
     shutil.rmtree( work_folder ) #use shutil b/c os.removedirs( work_folder ) only works when empty

@@ -48,6 +48,8 @@ Resources:
   S3LandingPadBucket:
     # Contains files Inbound From and Outbound To external data exchange partners
     # ToDo: Set 30-day lifecycle purge
+    # ToDo: Set 'Send Events to EventBridge'
+    # ToDo: Block all public access = on
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Join [ '-', [ !Ref 'AWS::StackName', "landing-pad" ]]
@@ -100,6 +102,20 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::442483223120:policy/daab-lab-StepFn_Exec
+
+  # ToDo ...
+  #LambdaProcessInitiatorPermission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    Action: lambda:InvokeFunction
+  #    #EventSourceToken: String
+  #    FunctionName: String
+  #    FunctionUrlAuthType: String
+  #    Principal: String
+  #    PrincipalOrgID: String
+  #    SourceAccount: String
+  #    SourceArn: !GetAtt [ EventRuleFDMDxFISCALDATA, Arn ]
+
 
   LambdaS3UnzipFunction:
     Type: AWS::Lambda::Function
@@ -195,6 +211,7 @@ Resources:
           Name: glueetl
           ScriptLocation: !Join [ '', [ 's3://', !Ref CodeBucket, '/', !Ref 'AWS::StackName', '/glue/Convert_CSV_To_Parquet.py' ]]
           #ScriptLocation: s3://daab-lab-fp5a-code/glue/Convert_CSV_To_Parquet.py
+          PythonVersion: "3"
         DefaultArguments:
           "--enable-metrics": "true"
           "--enable-spark-ui": "true"
@@ -206,8 +223,10 @@ Resources:
           "--spark-event-logs-path": "s3://aws-glue-assets-442483223120-us-east-2/sparkHistoryLogs/"
           "--TempDir": "s3://aws-glue-assets-442483223120-us-east-2/temporary/"
           "--BatchParms": "States.JsonToString($)"
+          "--ProcessParms": "States.JsonToString($)"
         ExecutionProperty:
           MaxConcurrentRuns: 2
+        GlueVerion: "4.0"
         MaxRetries: 0
         Role: !Ref GlueJobRole
 
@@ -225,6 +244,10 @@ Resources:
                 - "glue.amazonaws.com"
             Action:
               - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::442483223120:policy/daab-lab-S3_Write
+        # ToDo: resource-filtered GlueService policy
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
 
   StateMachineExtractZipToParquet:
     Type: AWS::StepFunctions::StateMachine
