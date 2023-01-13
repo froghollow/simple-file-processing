@@ -1,3 +1,5 @@
+data/*.ZIP
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,4 +129,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-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

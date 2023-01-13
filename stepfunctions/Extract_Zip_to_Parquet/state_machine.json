@@ -8,7 +8,7 @@
       "OutputPath": "$.Payload",
       "Parameters": {
         "Payload.$": "$",
-        "FunctionName": "arn:aws:lambda:us-east-1:442483223120:function:daab-lab-fp5a-S3_Unzip:$LATEST"
+        "FunctionName": "arn:$Partition:lambda:$Region:$AccountId:function:$Stack-S3_Unzip:$LATEST"
       },
       "Retry": [
         {
@@ -35,7 +35,7 @@
       },
       "ResultPath" : "$.GlueJobOuput",
       "Parameters": {
-        "JobName": "daab-lab-fp5a-Convert_CSV_To_Parquet",
+        "JobName": "$Stack-Convert_CSV_To_Parquet",
         "Arguments": {
           "--ProcessParms.$": "States.JsonToString($)"
         }

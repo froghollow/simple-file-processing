@@ -313,6 +313,7 @@ def import_raml_to_glue( glue_database_name, glue_table_name, raml, output_path=
     return json.loads(json.dumps(glue_sd_columns))
 
 ####### FILE UTILITY FUNCTIONS (copy from batch_functions) #########
+# ToDo: move file utilities to their own module file_functions.py
 import re
 import shutil
 
