@@ -1,0 +1,14 @@
+[
+  {
+    "Id": "target0",
+    "Arn": "arn:$Partition:lambda:$Region:$AccountId:function:$Stack-Process_Initiator",
+    "InputTransformer": {
+      "InputPathsMap": {
+        "detail-bucket-name": "$.detail.bucket.name",
+        "detail-object-key": "$.detail.object.key",
+        "source": "$.source"
+      },
+      "InputTemplate": "{\"source\": \"<source>\", \"detail\": {\"bucket\": {\"name\": \"<detail-bucket-name>\"}, \"object\": {\"key\": \"<detail-object-key>\"}}, \"process_parms\": {\"GlueDatabaseName\": \"$Stack-$SysAbbrev\", \"S3LandingPadBucket\": \"$Stack-landing-pad\", \"S3LandingPadInput\": \"$SysAbbrev/Inbound\", \"S3LandingPadOutput\": \"$SysAbbrev/Outbound\", \"S3DatalakeBucket\": \"$Stack-datalake\", \"S3DatalakeInput\": \"n/a\", \"S3DatalakeOutput\": \"$SysAbbrev/PARQUET\", \"StepFnArn\": \"arn:$Partition:states:$Region:$AccountId:stateMachine:$Stack-Extract_Zip_to_Parquet\"}}"
+    }
+  }
+]

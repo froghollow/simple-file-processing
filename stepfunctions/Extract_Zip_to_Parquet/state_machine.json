@@ -1,0 +1,46 @@
+{
+  "Comment": "This state machine Unzips an Archive and Converts the CSV Files to Parquet",
+  "StartAt": "Extract ZIP",
+  "States": {
+    "Extract ZIP": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:$Partition:lambda:$Region:$AccountId:function:$Stack-S3_Unzip:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Glue StartJobRun"
+    },
+    "Glue StartJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "InputPath": "$.body.process_parms",
+      "ResultSelector" : {
+        "GlueJobName.$" : "$.JobName",
+        "GlueJobRunId.$" : "$.JobRunId"        
+      },
+      "ResultPath" : "$.GlueJobOuput",
+      "Parameters": {
+        "JobName": "$Stack-Convert_CSV_To_Parquet",
+        "Arguments": {
+          "--ProcessParms.$": "States.JsonToString($)"
+        }
+      },
+      "End": true
+    }
+  }
+}

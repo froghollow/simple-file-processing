@@ -1,0 +1,30 @@
+{
+  "FunctionName": "daab-lab-fp5a-Process_Initiator",
+  "FunctionArn": "arn:aws:lambda:us-east-1:{aws_acct}:function:daab-lab-fp5a-Process_Initiator",
+  "Runtime": "python3.9",
+  "Role": "arn:aws:iam::{aws_acct}:role/daab-lab-fp5a-Process_Initiator_Role",
+  "Handler": "lambda_function.lambda_handler",
+  "CodeSize": 1738,
+  "Description": "Triggered by EventBridge to Execute a Process ARN Specified in the Target Input",
+  "Timeout": 60,
+  "MemorySize": 128,
+  "LastModified": "2023-01-08T19:31:00.000+0000",
+  "CodeSha256": "uvXn2Ldj6HuskRBP+30wzjP76Qf5NhKdST2yun6J3RM=",
+  "Version": "$LATEST",
+  "Environment": {
+    "Variables": {
+      "Region": "us-east-1",
+      "Stack": "daab-lab-fp5a"
+    }
+  },
+  "TracingConfig": {
+    "Mode": "PassThrough"
+  },
+  "RevisionId": "ba0b415f-2bc5-4597-a453-1d14f19f9ecb",
+  "State": "Active",
+  "LastUpdateStatus": "Successful",
+  "PackageType": "Zip",
+  "Architectures": [
+    "x86_64"
+  ]
+}

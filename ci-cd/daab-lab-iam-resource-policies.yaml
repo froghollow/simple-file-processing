@@ -1,0 +1,622 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM Policies with Environment Name Restrictions
+Parameters:
+  EnvParm:
+    Type: String
+    Default: daab-lab
+    AllowedValues:
+      - daab-lab
+      - daab-tst
+      
+    Description: Environment Prefix for Resource Name
+  #S3Key:
+  #  Description: Please provide the KMS key used for S3 encryption
+  #  Type: String
+  #  Default: >-
+  #    arn:aws:kms:us-gov-west-1:{aws_acct}:key/21604331-799e-4aac-9211-45cb3569736d
+  #SSMKey:
+  #  Description: Please provide the KMS key used for SSM encryption
+  #  Type: String
+  #  Default: >-
+  #    arn:aws:kms:us-gov-west-1:{aws_acct}:key/62d71707-fc57-4c17-9f28-447a6ea677bf
+
+Resources:
+  S3ReadPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-S3_Read'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ListBucketNames
+            Effect: Allow
+            Action:
+              - 's3:ListAllMyBuckets'
+            Resource: '*'
+          - Sid: ListSpecificBuckets
+            Effect: Allow
+            Action:
+              - 's3:ListBucket'
+            Resource: !Sub 'arn:aws:s3:::${EnvParm}-*'
+          - Sid: ReadS3
+            Effect: Allow
+            Action:
+              - 's3:Read*'
+              - 's3:Get*'
+            Resource: !Sub 'arn:aws:s3:::${EnvParm}-*'
+  S3WritePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-S3_Write'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ListBucketNames
+            Effect: Allow
+            Action:
+              - 's3:ListAllMyBuckets'
+            Resource: '*'
+          - Sid: ListSpecificBuckets
+            Effect: Allow
+            Action:
+              - 's3:ListBucket'
+            Resource: !Sub 'arn:aws:s3:::${EnvParm}-*'
+          - Sid: ReadS3
+            Effect: Allow
+            Action:
+              - 's3:Read*'
+              - 's3:Get*'
+            Resource: !Sub 'arn:aws:s3:::${EnvParm}-*'
+          - Sid: WriteS3
+            Effect: Allow
+            Action:
+              - 's3:PutObject'
+              - 's3:PutObjectAcl'
+            Resource: !Sub 'arn:aws:s3:::${EnvParm}-*'
+  S3CodeDataworkDelete:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-S3_CodeWork_Delete'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: DevS3Delete
+            Effect: Allow
+            Action:
+              - 's3:DeleteObject'
+            Resource: 
+              - !Sub 'arn:aws:s3:::${EnvParm}-datawork/*'
+              - !Sub 'arn:aws:s3:::${EnvParm}-code/*'
+  DynDbReadPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub '${EnvParm}-DynDB_Read'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:Scan'
+              - 'dynamodb:Query'
+            Resource: !Sub 
+              - 'arn:aws:dynamodb:*:*:table/${env}-*/index/*'
+              - env: !Ref EnvParm
+          - Effect: Allow
+            Action:
+              - 'dynamodb:BatchGetItem'
+              - 'dynamodb:ConditionCheckItem'
+              - 'dynamodb:DescribeTable'
+              - 'dynamodb:GetItem'
+              - 'dynamodb:DescribeContinuousBackups'
+              - 'dynamodb:Scan'
+              - 'dynamodb:ListTagsOfResource'
+              - 'dynamodb:Query'
+              - 'dynamodb:DescribeTimeToLive'
+            Resource: !Sub 
+              - 'arn:aws:dynamodb:*:*:table/${env}-*'
+              - env: !Ref EnvParm
+          - Effect: Allow
+            Action:
+              - 'dynamodb:DescribeReservedCapacityOfferings'
+              - 'dynamodb:ListGlobalTables'
+              - 'dynamodb:ListTables'
+              - 'dynamodb:DescribeReservedCapacity'
+              - 'dynamodb:ListBackups'
+              - 'dynamodb:DescribeLimits'
+              - 'dynamodb:ListStreams'
+            Resource: '*'
+  DynDbWritePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-DynDB_Write'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:*'
+            Resource: !Sub 
+              - 'arn:aws:dynamodb:*:*:table/${env}-*'
+              - env: !Ref EnvParm
+  RedshiftDescribePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-Redshift-EC2-Describe'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:DescribeAccountAttributes'
+              - 'ec2:DescribeAddresses'
+              - 'ec2:DescribeAvailabilityZones'
+              - 'ec2:DescribeSecurityGroups'
+              - 'ec2:DescribeSubnets'
+              - 'ec2:DescribeVpcs'
+              - 'ec2:DescribeInternetGateways'
+              - 'ec2:DescribeNetworkInterfaces'
+              - 'ec2:CreateNetworkInterface'
+              - 'ec2:DeleteNetworkInterface'
+              - 'sqs:SendMessage'
+            Resource: '*'
+  SnsPublishPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-SNS_Publish'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - 'sns:*'
+          Resource: !Sub 
+            - 'arn:aws:sns:*:*:${env}-*'
+            - env: !Ref EnvParm
+  SqsWritePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-SQS_Write'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action: 'sqs:ListQueues'
+            Resource: '*'
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action: 'sqs:*'
+            Resource: !Sub 
+              - 'arn:aws:sqs:*:*:${env}-*'
+              - env: !Ref EnvParm
+  WriteLambdaStep:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: StatesLambdaReadAll
+            Effect: Allow
+            Action:
+              - 'lambda:Get*'
+              - 'lambda:List*'
+              - 'states:Get*'
+              - 'states:List*'
+            Resource: '*'
+          - Sid: LambdaWrite
+            Effect: Allow
+            Action:
+              - 'lambda:*'
+            Resource:
+              - !Sub 'arn:aws:lambda:*:*:layer:${EnvParm}-*'
+              - !Sub 'arn:aws:lambda:*:*:event-source-mapping:*'
+              - !Sub 'arn:aws:lambda:*:*:function:${EnvParm}-*'
+          - Sid: ReadExtras
+            Effect: Allow
+            Action:
+              - 'iam:GetPolicy'
+              - 'iam:GetPolicyVersion'
+              - 'iam:GetRole'
+              - 'iam:GetRolePolicy'
+              - 'iam:ListAttachedRolePolicies'
+              - 'iam:ListRolePolicies'
+              - 'iam:ListRoles'
+              - 'logs:DescribeLogGroups'
+            Resource: '*'
+          - Sid: PassRoleRestricted
+            Effect: Allow
+            Action:
+              - 'iam:PassRole'
+            Resource: !Sub 'arn:aws:iam::{aws_acct}:role/${EnvParm}-*'
+            Condition:
+              StringEquals:
+                'iam:PassedToService': lambda.amazonaws.com
+          - Sid: StatesAll
+            Effect: Allow
+            Action:
+              - 'states:*'
+            Resource:
+              - !Sub 'arn:aws:states:*:*:activity:${EnvParm}-*'
+              - !Sub 'arn:aws:states:*:*:execution:${EnvParm}-*:*'
+              - !Sub 'arn:aws:states:*:*:stateMachine:${EnvParm}-*'
+          - Sid: EventBridge
+            Effect: Allow
+            Action:
+              - 'events:*'
+            Resource:
+              - !Sub 'arn:aws:events:*:*:rule/${EnvParm}-*/*'
+              - !Sub 'arn:aws:events:*:*:event-bus/${EnvParm}-*'
+      ManagedPolicyName: !Sub '${EnvParm}-LambdaStep_Write'
+  LambdaExecPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-Lambda_Exec'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - 'lambda:InvokeFunction'
+          Resource: !Sub 
+            - 'arn:aws:lambda:*:*:${env}-*'
+            - env: !Ref EnvParm
+  StepFnExecPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-StepFn_Exec'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - 'states:*'
+          Resource: !Sub 
+            - 'arn:aws:states:*:*:stateMachine:${env}-*'
+            - env: !Ref EnvParm
+  S3PutBucketNotifcationPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-S3_Put_Bucket_Notification'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action: 's3:PutBucketNotification'
+            Resource: !Sub 
+              - 'arn:aws:s3:::${env}-*'
+              - env: !Ref EnvParm
+  SsmGetParmPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-SSM_GetParm'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor1
+            Action:
+              - 'ssm:GetParameter'
+            Effect: Allow
+            Resource: !Sub 
+              - 'arn:aws:ssm:*:*:parameter/${env}-*'
+              - env: !Ref EnvParm
+  WriteSSM:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ReadSSM
+            Effect: Allow
+            Action:
+              - 'ssm:GetParameter'
+            Resource:
+              - !Sub 'arn:aws:ssm:*:{aws_acct}:parameter/${EnvParm}-*'
+          - Sid: WriteSSM
+            Effect: Allow
+            Action:
+              - 'ssm:PutParameter'
+            Resource:
+              - !Sub 'arn:aws:ssm:*:{aws_acct}:parameter/${EnvParm}-*'
+      ManagedPolicyName: !Sub '${EnvParm}-SSM_PutParm'
+  LambdaWritePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-Lambda_Write'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action: 'lambda:*'
+            Resource:
+              - 'arn:aws:lambda:*:*:layer:*:*'
+              - 'arn:aws:lambda:*:*:event-source-mapping:*'
+              - 'arn:aws:lambda:*:*:function:*'
+              - !Sub 
+                - 'arn:aws:lambda:*:*:function:${env}-*'
+                - env: !Ref EnvParm
+              - !Sub 
+                - 'arn:aws:lambda:*:*:layer:${env}-*'
+                - env: !Ref EnvParm
+  StepWritePolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-Step_Write'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+              - 'states:SendTaskSuccess'
+              - 'states:ListStateMachines'
+              - 'states:SendTaskFailure'
+              - 'states:ListActivities'
+              - 'states:StopExecution'
+              - 'states:SendTaskHeartbeat'
+            Resource: '*'
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action: 'states:*'
+            Resource:
+              - !Sub 
+                - 'arn:aws:states:*:*:stateMachine:${env}*'
+                - env: !Ref EnvParm
+              - !Sub 
+                - 'arn:aws:states:*:*:execution:${env}*:*'
+                - env: !Ref EnvParm
+  UserViewPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-User_View'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+              - 'cloudformation:Describe*'
+              - 'cloudformation:Detect*'
+              - 'cloudformation:Estimate*'
+              - 'cloudformation:Get*'
+              - 'cloudformation:List*'
+              - 'cloudwatch:DescribeAlarmsForMetric'
+              - 'cloudwatch:GetMetricData'
+              - 'cloudwatch:GetMetricStatistics'
+              - 'cloudwatch:ListDashboards'
+              - 'cloudwatch:ListMetrics'
+              - 'dynamodb:DescribeLimits'
+              - 'dynamodb:DescribeReservedCapacity'
+              - 'dynamodb:DescribeReservedCapacityOfferings'
+              - 'dynamodb:ListBackups'
+              - 'dynamodb:ListGlobalTables'
+              - 'dynamodb:ListStreams'
+              - 'dynamodb:ListTables'
+              - 'elasticmapreduce:DescribeSecurityConfiguration'
+              - 'elasticmapreduce:ListClusters'
+              - 'elasticmapreduce:ListSecurityConfigurations'
+              - 'elasticmapreduce:View*'
+              - 'kms:Describe*'
+              - 'kms:Get*'
+              - 'kms:List*'
+              - 'lambda:GetAccountSettings'
+              - 'lambda:ListEventSourceMappings'
+              - 'lambda:ListFunctions'
+              - 'lambda:ListLayers'
+              - 'lambda:ListLayerVersions'
+              - 'logs:DescribeDestinations'
+              - 'logs:DescribeExportTasks'
+              - 'logs:DescribeQueries'
+              - 'logs:DescribeResourcePolicies'
+              - 'logs:GetLogDelivery'
+              - 'logs:GetLogRecord'
+              - 'logs:GetQueryResults'
+              - 'logs:TestMetricFilter'
+              - 's3:GetAccountPublicAccessBlock'
+              - 's3:Head*'
+              - 's3:ListAllMyBuckets'
+              - 's3:ListJobs'
+              - 'sns:Get*'
+              - 'sns:List*'
+              - 'sqs:ListQueues'
+              - 'states:ListActivities'
+              - 'states:ListStateMachines'
+              - 'sts:Get*'
+            Resource: '*'
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action:
+              - 'cloudwatch:Describe*'
+              - 'cloudwatch:Get*'
+              - 'cloudwatch:List*'
+              - 'dynamodb:BatchGet*'
+              - 'dynamodb:Describe*'
+              - 'dynamodb:Get*'
+              - 'dynamodb:List*'
+              - 'dynamodb:Query'
+              - 'dynamodb:Scan'
+              - 'elasticmapreduce:Describe*'
+              - 'elasticmapreduce:List*'
+              - 'lambda:Get*'
+              - 'lambda:List*'
+              - 'logs:Describe*'
+              - 'logs:Get*'
+              - 's3:Get*'
+              - 's3:List*'
+              - 'sqs:Get*'
+              - 'sqs:List*'
+              - 'sqs:Receive*'
+              - 'states:Describe*'
+              - 'states:GetExecutionHistory'
+              - 'states:List*'
+            Resource:
+              - 'arn:aws:cloudwatch:*:*:alarm:*'
+              - 'arn:aws:cloudwatch::*:dashboard/*'
+              - !Sub 
+                - 'arn:aws:dynamodb:*:*:table/${env}-*'
+                - env: !Ref EnvParm
+              - 'arn:aws:dynamodb:*:*:table/*/backup/*'
+              - 'arn:aws:dynamodb:*:*:table/*/index/*'
+              - 'arn:aws:dynamodb:*:*:table/*/stream/*'
+              - 'arn:aws:dynamodb::*:global-table/*'
+              - !Sub 
+                - 'arn:aws:elasticmapreduce:*:*:cluster/BFS-${env}*'
+                - env: !Ref EnvParm
+              - 'arn:aws:lambda:*:*:event-source-mapping:*'
+              - !Sub 
+                - 'arn:aws:lambda:*:*:function:${env}-*'
+                - env: !Ref EnvParm
+              - 'arn:aws:lambda:*:*:layer:*:*'
+              - 'arn:aws:logs:*:*:log-group:*:*:*'
+              - 'arn:aws:s3:::*/*'
+              - !Sub 
+                - 'arn:aws:s3:::arn:aws:s3:::${env}-*'
+                - env: !Ref EnvParm
+              - !Sub 
+                - 'arn:aws:sqs:*:*:${env}-*'
+                - env: !Ref EnvParm
+              - 'arn:aws:states:*:*:activity:*'
+              - 'arn:aws:states:*:*:execution:*:*'
+              - !Sub 
+                - 'arn:aws:states:*:*:stateMachine:${env}-*'
+                - env: !Ref EnvParm
+          - Sid: VisualEditor2
+            Effect: Allow
+            Action:
+              - 'logs:Describe*'
+              - 'logs:FilterLogEvents'
+              - 'logs:Get*'
+              - 'logs:ListTagsLogGroup'
+              - 'logs:StartQuery'
+            Resource: 'arn:aws:logs:*:*:log-group:*'
+  ApiGatewayPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-API_Gateway'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action: 'apigateway:*'
+            Resource: '*'
+  CloudFormationPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Sub 
+        - '${env}-Cloud_Formation'
+        - env: !Ref EnvParm
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+              - 'ec2:DescribeNetworkInterfaces'
+              - 'ec2:DescribeVpcs'
+              - 'ec2:DescribeSubnets'
+              - 'ec2:DescribeSecurityGroups'
+            Resource: '*'
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action:
+              - 'iam:GetRole'
+              - 'iam:PassRole'
+              - 'iam:DeleteRole'
+              - 'iam:GetRolePolicy'
+            Resource: !Sub 'arn:aws:iam::*:role/${EnvParm}*'
+          - Sid: IAMAttachDetach
+            Effect: Allow
+            Action:
+              - 'iam:AttachRolePolicy'
+              - 'iam:DetachRolePolicy'
+            Resource: !Sub 'arn:aws:iam::*:role/${EnvParm}*'
+            Condition:
+              StringEquals:
+                'iam:PolicyARN': !Sub 'arn:aws:iam::{aws_acct}:policy/${EnvParm}*'
+          - Sid: VisualEditor2
+            Effect: Allow
+            Action: 'states:*'
+            Resource:
+              - 'arn:aws:states:*:*:execution:*:*'
+              - 'arn:aws:states:*:*:stateMachine:*'
+              - 'arn:aws:states:*:*:activity:*'
+          - Sid: VisualEditor3
+            Effect: Allow
+            Action: 'cloudformation:*'
+            Resource:
+              - >-
+                arn:aws:cloudformation:us-gov-west-1:aws:transform/Serverless-2016-10-31
+              - !Sub 'arn:aws:cloudformation:*:*:stack/${EnvParm}-*/*'
+              - !Sub 'arn:aws:cloudformation:*:*:stackset/${EnvParm}-*:*'
+          - Sid: VisualEditor4
+            Effect: Allow
+            Action:
+              - 'sns:ListTagsForResource'
+              - 'sns:TagResource'
+              - 'sns:ListSubscriptionsByTopic'
+              - 'sns:Publish'
+              - 'sns:GetTopicAttributes'
+              - 'sns:DeleteTopic'
+              - 'sns:CreateTopic'
+              - 'sns:ConfirmSubscription'
+              - 'sns:SetTopicAttributes'
+              - 'sns:Subscribe'
+              - 'sns:UntagResource'
+            Resource: !Sub 'arn:aws:sns:*:*:${EnvParm}*'
+          - Sid: VisualEditor5
+            Effect: Allow
+            Action:
+              - 'sns:CreatePlatformApplication'
+              - 'sns:CreatePlatformEndpoint'
+              - 'sns:GetPlatformApplicationAttributes'
+              - 'sns:ListTopics'
+              - 'sns:Unsubscribe'
+              - 'sns:GetSubscriptionAttributes'
+              - 'sns:ListSubscriptions'
+              - 'sns:DeleteEndpoint'
+              - 'sns:ListEndpointsByPlatformApplication'
+              - 'sns:SetEndpointAttributes'
+              - 'sns:GetEndpointAttributes'
+              - 'sns:SetSubscriptionAttributes'
+              - 'sns:DeletePlatformApplication'
+              - 'sns:SetPlatformApplicationAttributes'
+              - 'sns:ListPlatformApplications'
+            Resource: '*'
+          - Sid: VisualEditor6
+            Effect: Allow
+            Action:
+              - 'cloudwatch:PutMetricData'
+              - 'cloudwatch:PutMetricAlarm'
+            Resource: '*'

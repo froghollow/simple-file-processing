@@ -1,0 +1,298 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description:  SIMPLE File Processing
+
+Parameters:
+  DeployId:
+    Description: Identifier for this Stack Deployment
+    Type: String
+    Default: 230113-1159
+
+  Env:
+    Description: Environment Prefix for Resource Name
+    Type: String
+    Default: daab-lab
+    AllowedValues:
+      - daab-lab
+      - daab-dev
+      - daab-tst
+
+  CodeBucket:
+    Description: Resource Definitions & Lambda Deployment Packages
+    Type: String
+    Default: daab-lab-code-us-east-2
+    AllowedValues:
+      - daab-lab-code-us-east-1
+      - daab-lab-code-us-east-2
+      
+  GlueDbName:
+    Description: Name of Glue Database (all lowercase)
+    Type: String
+    Default: $GlueDbName
+
+  Qualifier:
+    Description: First node in File Name 'High-Level-Qualifier' designates Business Area & Environment
+    Type: String
+    Default: $Qualifier 
+
+  SysAbbrev:
+    Description: Short Abbreviation Identifying System (e.g., TOP,CRS,CSNG, etc.)
+    Type: String
+    Default: $SysAbbrev
+    
+
+  #Mappings:
+  #  Environment:
+
+Resources:
+  #S3CodeBucket:
+    # Code Bucket must exist and contain ref'd code before running stack ,
+    # ToDo: remove from this template and set up Environment Mapping
+    #Type: AWS::S3::Bucket
+    #Properties:
+    #  BucketName: !Join [ '-', [ !Ref 'AWS::StackName', "code" ]]
+
+  S3DataLakeBucket:
+    # Contains 'processed' data 
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref 'AWS::StackName', "datalake" ]]
+
+  S3LandingPadBucket:
+    # Contains files Inbound From and Outbound To external data exchange partners
+    # ToDo: Set 30-day lifecycle purge
+    # ToDo: Block all public access = on
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ '-', [ !Ref 'AWS::StackName', "landing-pad" ]]
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+
+  GlueFiscalDataDB:
+    # Glue Database contains Tables that provide access to data sets stored in S3DataLakeBucket
+    # (Glue Tables are created from metadata, in a process outside Cloudformation)
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Ref GlueDbName
+        Description: TOP tables imported from FiscalData
+        LocationUri: !Join [ '/', [ "s3:/", !Ref S3DataLakeBucket, !Ref SysAbbrev ]]
+
+  LambdaProcessInitiatorFunction:
+    # Lambda function triggered by EventBridge to enhance job parms before invoking downstream processing
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join [ '-', [ !Ref 'AWS::StackName', "Process_Initiator" ]]
+      Description:  Triggered by EventBridge to Execute a Process ARN Specified in the Target Input  
+      Role: !GetAtt [ LambdaProcessInitiatorRole, Arn ]
+      Code: 
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Join [ '/', [ !Ref 'AWS::StackName', 'lambda/Process_Initiator.zip' ]] 
+      Runtime: python3.9
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Timeout: 60
+      ReservedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          Region: !Ref 'AWS::Region'
+          Stack:  !Ref 'AWS::StackName'
+
+  LambdaProcessInitiatorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join [ '-', [ !Ref 'AWS::StackName', "Process_Initiator_Role" ]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:$Partition:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:$Partition:iam::$AccountId:policy/daab-lab-StepFn_Exec
+
+  # ToDo ...
+  LambdaProcessInitiatorPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt [ LambdaProcessInitiatorFunction, Arn ]
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt [ EventRuleFDMDxFISCALDATA, Arn ]
+
+  LambdaS3UnzipFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join [ '-', [ !Ref 'AWS::StackName', "S3_Unzip" ]]
+      Description:  Download ZIP archive file from S3, extract it, and upload GZip'd member files to S3
+      Role: !GetAtt [ LambdaS3UnzipRole, Arn ]
+      Code: 
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Join [ '/', [ !Ref 'AWS::StackName', 'lambda/S3_Unzip.zip' ]]
+      Runtime: python3.9
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Timeout: 60
+      ReservedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          Region: !Ref 'AWS::Region'
+          Stack:  !Ref 'AWS::StackName'
+
+  LambdaS3UnzipRole:
+  #S3UnzipFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join [ '-', [ !Ref 'AWS::StackName', "S3_Unzip_Role" ]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:$Partition:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:$Partition:iam::$AccountId:policy/daab-lab-S3_Write
+
+  EventRuleFDMDxFISCALDATA:
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: !Join [ '', [ !Ref 'AWS::StackName', '-', !Ref Qualifier, '.', !Ref SysAbbrev ]]
+      #Description: Inbound ZIP file containing FiscalData extracts
+      Description: When 'FDMD.FSDATA*' files arrive in S3 landing pad ...
+      EventPattern: 
+        source:
+        - aws.s3
+        detail-type:
+        - Object Created
+        detail:
+          bucket:
+            name:
+            - !Join [ '-', [ !Ref 'AWS::StackName', "landing-pad" ]]
+          object:
+            key:
+            - prefix: FSDATA/Inbound/FDMD.FSDATA
+            
+      #RoleArn: String
+      #ScheduleExpression: String
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt [ LambdaProcessInitiatorFunction , Arn ]
+          Id: ExecBatchInitiatorFunction1
+          #RoleArn: tbd
+          InputTransformer:
+            InputPathsMap:
+              "detail-bucket-name": "$.detail.bucket.name"
+              "detail-object-key": "$.detail.object.key"
+              "source": "$.source" 
+            InputTemplate: |
+                {
+                  "source": "<source>",
+                  "detail": {
+                    "bucket": {
+                      "name": "<detail-bucket-name>"
+                    },
+                    "object": {
+                      "key": "<detail-object-key>"
+                    }
+                  },
+                  "process_parms": {
+                    "GlueDatabaseName": "$Stack-$SysAbbrev",
+                    "S3LandingPadBucket": "$Stack-landing-pad",
+                    "S3LandingPadInput": "$SysAbbrev/Inbound",
+                    "S3LandingPadOutput": "$SysAbbrev/Outbound",
+                    "S3DatalakeBucket": "$Stack-datalake",
+                    "S3DatalakeInput": "n/a",
+                    "S3DatalakeOutput": "$SysAbbrev/PARQUET",
+                    "StepFnArn": "arn:$Partition:states:$Region:$AccountId:stateMachine:$Stack-Extract_Zip_to_Parquet"
+                  }
+                }
+
+  GlueJobConvertCsvToParquet:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: !Join [ '-', [ !Ref 'AWS::StackName', "Convert_CSV_To_Parquet" ]]
+      Command:
+        Name: glueetl
+        ScriptLocation: !Join [ '', [ 's3://', !Ref CodeBucket, '/', !Ref 'AWS::StackName', '/glue/Convert_CSV_To_Parquet.py' ]]
+        #ScriptLocation: s3://daab-lab-fp5a-code/glue/Convert_CSV_To_Parquet.py
+        PythonVersion: "3"
+      DefaultArguments:
+        "--enable-metrics": "true"
+        "--enable-spark-ui": "true"
+        "--enable-job-insights": "true"
+        "--enable-glue-datacatalog": "true"
+        "--enable-continuous-cloudwatch-log": "true"
+        "--job-bookmark-option": "job-bookmark-enable"
+        "--job-language": "python"
+        #"--spark-event-logs-path": "s3://aws-glue-assets-{aws_acct}-us-east-2/sparkHistoryLogs/"
+        "--spark-event-logs-path": !Join [ '', [ "s3://aws-glue-assets-" , !Ref AWS::AccountId, "-", !Ref AWS::Region, "/sparkHistoryLogs/"  ]]
+        #"--TempDir": "s3://aws-glue-assets-{aws_acct}-us-east-2/temporary/"
+        "--TempDir": !Join [ '', [ "s3://aws-glue-assets-", !Ref AWS::AccountId, "-", !Ref AWS::Region, "/temporary/" ]]
+        #"--BatchParms": "States.JsonToString($)"
+        "--ProcessParms": "States.JsonToString($)"
+      ExecutionProperty:
+        MaxConcurrentRuns: 2
+      NumberOfWorkers: 2
+      GlueVersion: "4.0"
+      WorkerType: "Standard"
+      MaxRetries: 0
+      Role: !Ref GlueJobRole
+
+  GlueJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join [ '-', [ !Ref 'AWS::StackName', "Glue_Job_Service_Role" ]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "glue.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:$Partition:iam::$AccountId:policy/daab-lab-S3_Write
+        # ToDo: resource-filtered GlueService policy
+        - arn:$Partition:iam::aws:policy/service-role/AWSGlueServiceRole
+
+  StateMachineExtractZipToParquet:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Join [ '-', [ !Ref 'AWS::StackName', "Extract_Zip_to_Parquet" ]]
+      DefinitionS3Location:
+        Bucket: !Ref CodeBucket
+        #Key: stepfunctions/Extract_Zip_to_Parquet/state_machine.json
+        Key: !Join [ '/', [ !Ref 'AWS::StackName', "stepfunctions/Extract_Zip_to_Parquet/state_machine.json" ]]
+      #DefinitionSubstitutions:   ToDo
+      #  HelloFunction: arn:aws:lambda:us-east-1:111122223333:function:HelloFunction
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+
+  StatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join [ '-', [ !Ref 'AWS::StackName', "StatesExecutionRole" ]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.us-east-1.amazonaws.com
+                - !Sub states.us-east-2.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+      - arn:$Partition:iam::$AccountId:policy/daab-lab-Lambda_Exec
+      - arn:$Partition:iam::$AccountId:policy/service-role/GlueStartJobRunFullAccessPolicy-92592973-790e-4021-a0db-673c2d348be6

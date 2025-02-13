@@ -1,0 +1,327 @@
+#%RAML 1.0
+
+title: Import from FiscalData Data Dictionary Treasury Offset Program Dataset
+types:
+  Federal Collections:
+    type: object
+    properties:
+      record_date:
+        type: date
+        displayName: Record Date
+        description: The date that data was published.
+        required: true
+        (fd_data_type): DATE
+      creditor_agency_nm:
+        type: string
+        displayName: Creditor Agency Name
+        description: The name of the federal or state agency that refers delinquent
+          debts to the Treasury Offset Program.   An agency that requests the Fiscal
+          Service's services in collecting its delinquent debt by inclusion in TOP
+          for administrative offset.
+        required: true
+        (fd_data_type): STRING
+      creditor_agency_id:
+        type: string
+        displayName: Agency ID
+        description: The ID of the federal or state agency that refers delinquent
+          debts to the Treasury Offset Program.   An agency that requests the Fiscal
+          Service's services in collecting its delinquent debt by inclusion in TOP
+          for administrative offset.
+        required: true
+        (fd_data_type): STRING
+      agency_type:
+        type: string
+        displayName: Agency Site Type Code
+        description: Type of creditor agency, based on whether the agency is a Federal
+          or state entity and based on the type of debt they refer to the Treasury
+          Offset Program.
+        required: true
+        (fd_data_type): STRING
+      agency_site:
+        type: string
+        displayName: Agency Site ID
+        description: 'Identifying alpha/numeric field for the Federal or state agency
+          participating in the Treasury Offset Program.   Assigned by the U.S. Treasury.  '
+        required: true
+        (fd_data_type): STRING
+      agency_site_nm:
+        type: string
+        displayName: Agency Site Name
+        description: 'Identifying alpha/numeric field for the Federal or state agency
+          participating in the Treasury Offset Program.   Assigned by the U.S. Treasury.  '
+        required: true
+        (fd_data_type): STRING
+      source_agency:
+        type: string
+        displayName: Source Agency Alpha
+        description: Identifier of the Creditor Agency who received the offset collections.
+        required: true
+        (fd_data_type): STRING
+      source_agency_1:
+        type: string
+        displayName: Source Agency Numeric
+        description: Identifier of the Creditor Agency who received the offset collections.
+        required: true
+        (fd_data_type): STRING
+      source_agency_site:
+        type: string
+        displayName: Source Agency Site ID
+        description: Identifier of the Creditor Agency who received the offset collections.
+        required: true
+        (fd_data_type): STRING
+      payment_agency_nm:
+        type: string
+        displayName: Agency Name
+        description: The name of the federal agency that certifies payment information
+          in either a check or ACH format and requests payment disbursement by the
+          Fiscal Service.  In TOP processing, a payment agency is a Federal or state
+          agency which provides payment files that are used in the Fiscal Services
+          TOP matching process.
+        required: true
+        (fd_data_type): STRING
+      payment_agency:
+        type: string
+        displayName: Payment Agency ID
+        description: The ID of the federal agency that certifies payment information
+          in either a check or ACH format and requests payment disbursement by the
+          Fiscal Service.  In TOP processing, a payment agency is a Federal or state
+          agency which provides payment files that are used in the Fiscal Services
+          TOP matching process.
+        required: true
+        (fd_data_type): STRING
+      agency_type_cd:
+        type: string
+        displayName: Agency Type Code
+        description: Type of payment agency, based on whether the agency is a Federal
+          or state entity and based on the type of debt referred to the Treasury Offset
+          Program.
+        required: true
+        (fd_data_type): STRING
+      payment_source_desc:
+        type: string
+        displayName: Payment Source Description
+        description: 'Federal or state agency that provides the payment file to the
+          match against the TOP System for delinquent debt collection.  '
+        required: true
+        (fd_data_type): STRING
+      payment_source_cd:
+        type: string
+        displayName: Payment Source Code
+        description: 'Code for the federal or state agency that provides the payment
+          file to the match against the TOP System for delinquent debt collection.  '
+        required: true
+        (fd_data_type): STRING
+      payment_category:
+        type: string
+        displayName: Payment Category Description
+        description: 'Type of Federal or state payment matched against TOP system.  '
+        required: true
+        (fd_data_type): STRING
+      payment_type_desc:
+        type: string
+        displayName: Payment Type Description
+        description: 'Payment Type: (OCSE use only) This will be a unique TOP code
+          identifying the type of payment being offset or levied, if applicable.'
+        required: true
+        (fd_data_type): STRING
+      payment_type_cd:
+        type: string
+        displayName: Payment Type Code
+        description: 'Payment Type: (OCSE use only) This will be a unique TOP code
+          identifying the type of payment being offset or levied, if applicable.'
+        required: true
+        (fd_data_type): STRING
+      payment_type_id:
+        type: string
+        displayName: Payment Type ID
+        description: 'Payment Type: (OCSE use only) This will be a unique TOP code
+          identifying the type of payment being offset or levied, if applicable.'
+        required: true
+        (fd_data_type): STRING
+      debt_type_cd:
+        type: string
+        displayName: Debt Type Code
+        description: 'The code describing the nature of the debt owed to the Federal
+          or state agency, as defined by Debt Management Systems (DMS), based on how
+          the debt was originated and what type of agency it is owed.  Must be a valid
+          Debt Type as identified by DMS.  '
+        required: true
+        (fd_data_type): STRING
+      debt_type_desc:
+        type: string
+        displayName: Debt Type Description
+        description: 'The nature of the debt owed to the Federal or state agency,
+          as defined by Debt Management Services (DMS), based on how the debt was
+          originated and what type of agency it is owed.  Must be a valid Debt Type
+          as identified by DMS.  Currently TOP has 6 debt types:   1. Federal tax
+          debt   2. Child support debt (Temporary Assistance for Needy Families (TANF)
+          and Non-TANF)   3. Federal non-tax debt   4. State income tax debt   5.
+          State unemployment compensation insurance debts (overpayments and tax debt)   6.
+          Other state debts'
+        required: true
+        (fd_data_type): STRING
+      taxable:
+        type: string
+        displayName: Taxable Indicator
+        description: IRS Federal tax debt, or state income tax debt or unemployment
+          insurance compensation debt referred to TOP.
+        required: true
+        (fd_data_type): STRING
+      gross_amt:
+        type: number
+        displayName: Total Gross Amount
+        description: The dollar value of offsets before any reversals.
+        required: true
+        (fd_data_type): CURRENCY
+      net_amt:
+        type: number
+        displayName: Total Net Amount
+        description: The dollar value of offsets once reversals have been removed.
+        required: true
+        (fd_data_type): CURRENCY
+      gross_cnt:
+        type: string
+        displayName: Total Gross Count
+        description: The amount of offsets before any reversals.
+        required: true
+        (fd_data_type): NUMBER
+      net_cnt:
+        type: string
+        displayName: Total Net Count
+        description: The count of offsets once reversals have been removed.
+        required: true
+        (fd_data_type): NUMBER
+      record_fiscal_year:
+        type: integer
+        displayName: Fiscal Year
+        description: The fiscal year associated with record_date.  The federal government's
+          fiscal year runs from October 1 to September 30.
+        required: true
+        (fd_data_type): YEAR
+      record_fiscal_quarter:
+        type: integer
+        displayName: Fiscal Quarter Number
+        description: 'The fiscal quarter associated with record_date.  For the federal
+          government these quarters are: Q1 - October to December, Q2 - January to
+          March, Q3 - April to June, Q4 - July to September.'
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_year:
+        type: integer
+        displayName: Calendar Year
+        description: The calendar year associated with record_date.
+        required: true
+        (fd_data_type): YEAR
+      record_calendar_quarter:
+        type: integer
+        displayName: Calendar Quarter Number
+        description: The calendar quarter associated with record_date.
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_month:
+        type: integer
+        displayName: Calendar Month Number
+        description: The calendar month associated with record_date.
+        required: true
+        (fd_data_type): MONTH
+      record_calendar_day:
+        type: integer
+        displayName: Calendar Day Number
+        description: The calendar day associated with record_date.
+        required: true
+        (fd_data_type): DAY
+  State Programs:
+    type: object
+    properties:
+      record_date:
+        type: date
+        displayName: Record Date
+        description: The date that data was published.
+        required: true
+        (fd_data_type): DATE
+      state_nm:
+        type: string
+        displayName: State Name
+        description: Name of the state/territory or District of Columbia participating
+          in the Treasury Offset Program.
+        required: true
+        (fd_data_type): STRING
+      state_cd:
+        type: string
+        displayName: State Code
+        description: Code of the state/territory or District of Columbia participating
+          in the Treasury Offset Program.
+        required: true
+        (fd_data_type): STRING
+      program_desc:
+        type: string
+        displayName: Program Description
+        description: 'Narrative description of the offset matching program, based
+          on debt type authorized and eligible for delinquent debt collection.  '
+        required: true
+        (fd_data_type): STRING
+      program_id:
+        type: string
+        displayName: Program ID
+        description: 'ID of the offset matching program, based on debt type authorized
+          and eligible for delinquent debt collection.  '
+        required: true
+        (fd_data_type): STRING
+      is_program_participation:
+        type: string
+        displayName: Program Participation Indicator
+        description: Indicator of whether the Federal agency or state participates
+          in the Treasury Offset Program.
+        required: true
+        (fd_data_type): STRING
+      is_complete_year:
+        type: string
+        displayName: Year Completed Indicator
+        description: Whether the current collection year has been completed.
+        required: true
+        (fd_data_type): STRING
+      total_amt:
+        type: number
+        displayName: Total Amount
+        description: The dollar value of offsets.
+        required: true
+        (fd_data_type): CURRENCY
+      record_fiscal_year:
+        type: integer
+        displayName: Fiscal Year
+        description: The fiscal year associated with record_date.  The federal government's
+          fiscal year runs from October 1 to September 30.
+        required: true
+        (fd_data_type): YEAR
+      record_fiscal_quarter:
+        type: integer
+        displayName: Fiscal Quarter Number
+        description: 'The fiscal quarter associated with record_date.  For the federal
+          government these quarters are: Q1 - October to December, Q2 - January to
+          March, Q3 - April to June, Q4 - July to September.'
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_year:
+        type: integer
+        displayName: Calendar Year
+        description: The calendar year associated with record_date.
+        required: true
+        (fd_data_type): YEAR
+      record_calendar_quarter:
+        type: integer
+        displayName: Calendar Quarter Number
+        description: The calendar quarter associated with record_date.
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_month:
+        type: integer
+        displayName: Calendar Month Number
+        description: The calendar month associated with record_date.
+        required: true
+        (fd_data_type): MONTH
+      record_calendar_day:
+        type: integer
+        displayName: Calendar Day Number
+        description: The calendar day associated with record_date.
+        required: true
+        (fd_data_type): DAY

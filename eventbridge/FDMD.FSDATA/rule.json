@@ -1,0 +1,9 @@
+{
+  "Name": "$Stack-$Qualifier.$SysAbbrev",
+  "Arn": "arn:$Partition:events:$Region:$AccountId:rule/$Stack-$Qualifier.$SysAbbrev",
+  "EventPattern": "{\"detail-type\": [\"Object Created\"], \"source\": [\"aws.s3\"], \"detail\": {\"bucket\": {\"name\": [\"$Stack-landing-pad\"]}, \"object\": {\"key\": [{\"prefix\": \"$SysAbbrev/Inbound/$Qualifier.$SysAbbrev\"}]}}}",
+  "State": "ENABLED",
+  "Description": "When '$Qualifier.$SysAbbrev*' files arrive in 's3://$Stack-landing-pad/$SysAbbrev/Inbound/' ...",
+  "EventBusName": "default",
+  "CreatedBy": "{aws_acct}"
+}

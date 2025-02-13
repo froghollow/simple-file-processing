@@ -1,0 +1,90 @@
+#%RAML 1.0
+
+title: Import from FiscalData Data Dictionary Average Interest Rates on U.S. Treasury Securities Dataset
+types:
+  Average Interest Rates on U.S. Treasury Securities:
+    type: object
+    properties:
+      record_date:
+        type: date
+        displayName: Record Date
+        description: The date that data was published.
+        required: true
+        (fd_data_type): DATE
+      security_type_desc:
+        type: string
+        displayName: Security Type Description
+        description: Indicates whether a security type is marketable or nonmarketable.
+          Marketable Debt includes Treasury Bills, Notes, Bonds, Floating Rate Notes,
+          and Inflation-Protected Securities where ownership can be transferred from
+          one person or entity to another. They can also be traded on the secondary
+          market. Nonmarketable securities include Savings Bonds, Government Account
+          Series, State and Local Government Series, Domestic Series and Foreign Series
+          securities where legal ownership cannot be transferred.
+        required: true
+        (fd_data_type): STRING
+      security_desc:
+        type: string
+        displayName: Security Description
+        description: 'The type of debt instrument issued to raise money needed to
+          operate the federal government and pay off maturing obligations. '
+        required: true
+        (fd_data_type): STRING
+      avg_interest_rate_amt:
+        type: number
+        displayName: Average Interest Rate Amount
+        description: Average Interest Rates are a calculated percentage based on the
+          aggregate interest payments divided by the total debt.  In this table the
+          Total Marketable, Total Nonmarketable, and Total Interest-bearing Debt rates
+          do not include the Treasury Inflation-Indexed Securities and the Treasury
+          Floating Rate Notes.
+        required: false
+        (fd_data_type): PERCENTAGE
+      src_line_nbr:
+        type: string
+        displayName: Source Line Number
+        description: Indicates the row of the corresponding table where a data point
+          can be found.  This can assist in structuring the data in a similar format
+          to the published report and in understanding potential hierarchies within
+          the table.
+        required: true
+        (fd_data_type): NUMBER
+      record_fiscal_year:
+        type: integer
+        displayName: Fiscal Year
+        description: The fiscal year associated with record_date.  The federal government's
+          fiscal year runs from October 1 to September 30.
+        required: true
+        (fd_data_type): YEAR
+      record_fiscal_quarter:
+        type: integer
+        displayName: Fiscal Quarter Number
+        description: 'The fiscal quarter associated with record_date.  For the federal
+          government these quarters are: Q1 - October to December, Q2 - January to
+          March, Q3 - April to June, Q4 - July to September.'
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_year:
+        type: integer
+        displayName: Calendar Year
+        description: The calendar year associated with record_date.
+        required: true
+        (fd_data_type): YEAR
+      record_calendar_quarter:
+        type: integer
+        displayName: Calendar Quarter Number
+        description: The calendar quarter associated with record_date.
+        required: true
+        (fd_data_type): QUARTER
+      record_calendar_month:
+        type: integer
+        displayName: Calendar Month Number
+        description: The calendar month associated with record_date.
+        required: true
+        (fd_data_type): MONTH
+      record_calendar_day:
+        type: integer
+        displayName: Calendar Day Number
+        description: The calendar day associated with record_date.
+        required: true
+        (fd_data_type): DAY
